@@ -1,11 +1,5 @@
-from django.shortcuts import render
-from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.models import User
-from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth import logout
-from django.contrib import messages
-from datetime import datetime
-
 from django.http import JsonResponse
 from django.contrib.auth import login, authenticate
 import logging
@@ -38,16 +32,17 @@ def login_user(request):
         data = {"userName": username, "status": "Authenticated"}
     return JsonResponse(data)
 
+
 # Create a `logout_request` view to handle sign out request
 def logout_request(request):
     logout(request)
     data = {"userName": ""}
     return JsonResponse(data)
 
+
 # Create a `registration` view to handle sign up request
 @csrf_exempt
 def registration(request):
-    context = {}
     data = json.loads(request.body)
     username = data['userName']
     password = data['password']
@@ -55,22 +50,25 @@ def registration(request):
     last_name = data['lastName']
     email = data['email']
     username_exist = False
-    
+
     try:
         User.objects.get(username=username)
         username_exist = True
-    except:
+    except Exception:
         logger.debug("{} is new user".format(username))
-    
+
     if not username_exist:
-        user = User.objects.create_user(username=username, first_name=first_name, 
-                                        last_name=last_name, password=password, email=email)
+        user = User.objects.create_user(username=username,
+                                        first_name=first_name,
+                                        last_name=last_name,
+                                        password=password, email=email)
         login(request, user)
         data = {"userName": username, "status": "Authenticated"}
         return JsonResponse(data)
     else:
         data = {"userName": username, "error": "Already Registered"}
         return JsonResponse(data)
+
 
 # Update the `get_dealerships` view to render the index page with
 # a list of dealerships
@@ -117,15 +115,17 @@ def get_dealer_details(request, dealer_id):
 # Create a `add_review` view to submit a review
 @csrf_exempt
 def add_review(request):
-    if request.user.is_anonymous == False:
+    if request.user.is_anonymous is False:
         data = json.loads(request.body)
         try:
-            response = post_review(data)
+            post_review(data)
             return JsonResponse({"status": 200})
-        except:
-            return JsonResponse({"status": 401, "message": "Error in posting review"})
+        except Exception:
+            return JsonResponse(
+                {"status": 401, "message": "Error in posting review"})
     else:
         return JsonResponse({"status": 403, "message": "Unauthorized"})
+
 
 # Get cars view
 def get_cars(request):
